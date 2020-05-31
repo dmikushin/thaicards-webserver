@@ -1,0 +1,44 @@
+// Embed content into hex array for in-memory caching
+
+#include <cstring>
+#include <map>
+#include <memory>
+#include <vector>
+
+#define STR(val) #val
+
+using namespace std;
+
+// Container for embedded content that shall be
+// loaded and persist in memory during the server lifetime.
+extern unique_ptr<map<string, vector<unsigned char>*> > www_data;
+
+// Container for embedded content MIME.
+extern unique_ptr<map<string, string> > www_data_mime;
+
+static unsigned char hex_content[] = { @CONTENT_HEX@ };
+
+class AddFile_@FILE_NAME_HASH@
+{
+public :
+
+	AddFile_@FILE_NAME_HASH@()
+	{
+		if (!www_data.get())
+			www_data.reset(new map<string, vector<unsigned char>*>());
+
+		static vector<unsigned char> hex_source(sizeof(hex_content));
+		memcpy(&hex_source[0], hex_content, sizeof(hex_content));
+	
+		const string file_name = "@FILE_NAME@";
+		(*www_data)[file_name] = &hex_source;
+
+		if (!www_data_mime.get())
+			www_data_mime.reset(new map<string, string>());
+		
+		(*www_data_mime)[file_name] = STR(@FILE_MIME@);
+	};
+};
+
+static AddFile_@FILE_NAME_HASH@ addFile_@FILE_NAME_HASH@;
+
