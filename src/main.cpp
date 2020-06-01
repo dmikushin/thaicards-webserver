@@ -1,5 +1,7 @@
 #include "index.h"
 #include "sslkeys.h"
+#include "timing.h"
+#include "wait.h"
 
 #include <cmath>
 #include <climits> // HOST_NAME_MAX
@@ -7,9 +9,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
+#include <json/json.h>
 #include <map>
 #include <memory>
 #include <microhttpd.h>
+#include <regex>
 #include <sstream>
 #include <thread>
 #include <unistd.h>
@@ -28,20 +32,21 @@ unique_ptr<map<string, vector<unsigned char>*> > www_data;
 unique_ptr<map<string, string> > www_data_mime;
 
 static Index indexPage;
+static Wait waitPage;
 
 class Post
 {
 	const char* empty;
-	vector<char> dataset;
+	vector<char> json;
 
 public :
 
 	Post() : empty("") { }
 
-	const char* getDataSet()
+	const char* getJson()
 	{
-		if (dataset.size())
-			return (const char*)&dataset[0];
+		if (json.size())
+			return (const char*)&json[0];
 		
 		return empty;
 	}
@@ -52,20 +57,20 @@ public :
 		const char* filename, const char* content_type, const char* transfer_encoding,
 		const char* data, uint64_t offset, size_t size)
 	{
-		if (!strcmp(key, "dataset") && size)
+		if (!strcmp(key, "json") && size)
 		{
 			Post* post = reinterpret_cast<Post*>(con_cls);
 		
-			if (post->dataset.size() < offset + size)
+			if (post->json.size() < offset + size)
 			{
 				if (offset + size > DATASETSIZE)
 					return MHD_NO;
 
-				post->dataset.resize(offset + size + 1);
+				post->json.resize(offset + size + 1);
 			}
 		
-			memcpy(&post->dataset[offset], data, size);
-			post->dataset[post->dataset.size() - 1] = '\0';
+			memcpy(&post->json[offset], data, size);
+			post->json[post->json.size() - 1] = '\0';
 		}
 
 		return MHD_YES;
@@ -173,7 +178,49 @@ static int callback(void* cls, struct MHD_Connection* connection,
 		}
 		else
 		{
-			// TODO Add post actions
+			string content(post->getJson());
+
+			// Strip lines starting with #.
+			regex r("#.*\r?\n");
+			std::string json = content;
+			while (std::regex_search(json, r))
+				json = std::regex_replace(json, r, "");
+
+			// Ensure string parses as correct JSON.
+			Json::Value json_parsed;
+			try
+			{
+				json_parsed.clear();
+				Json::Reader reader;
+				if (reader.parse(json, json_parsed))
+				{
+					uint64_t timestamp;
+					get_time(&timestamp);
+
+					// TODO Implement job server
+					// jobs[timestamp].execute(json_parsed);
+
+					result = waitPage.getHtml(timestamp);
+				}
+				else
+				{
+					stringstream ss;
+					ss << "<html>";
+					ss << "<h1>Invalid JSON</h1>";
+					ss << reader.getFormatedErrorMessages();
+					ss << "</html>";
+					result = ss.str();
+				}
+			}
+			catch (exception &e)
+			{
+				stringstream ss;
+				ss << "<html>";
+				ss << "<h1>Invalid JSON</h1>";
+				ss << e.what();
+				ss << "</html>";
+				result = ss.str();
+			}
 		}
 	}
 	else if (!getFile(&curl[1], result, mime))
@@ -181,14 +228,14 @@ static int callback(void* cls, struct MHD_Connection* connection,
 		return result_404(connection);
 	}	
 
-    // Reset when done.
-    struct MHD_Response* response = MHD_create_response_from_buffer(
-    	result.size(), &result[0], MHD_RESPMEM_MUST_COPY);
+	// Reset when done.
+	struct MHD_Response* response = MHD_create_response_from_buffer(
+		result.size(), &result[0], MHD_RESPMEM_MUST_COPY);
 	MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, mime.c_str());
-    int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
-    MHD_destroy_response(response);
+	int ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+	MHD_destroy_response(response);
     
-    return ret;
+	return ret;
 }
 
 static int result_302(void* cls, struct MHD_Connection* connection,

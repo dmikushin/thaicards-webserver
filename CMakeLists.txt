@@ -9,6 +9,12 @@ set(PROJECT_VERSION_PATCH 0)
 # Search path for CMake include files.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+set(JSONCPP_WITH_TESTS OFF CACHE BOOL "")
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/jsoncpp EXCLUDE_FROM_ALL)
+set_property(TARGET jsoncpp_lib_static PROPERTY POSITION_INDEPENDENT_CODE ON)
+set(JSONCPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/jsoncpp/include")
+set(JSONCPP_LIBRARIES jsoncpp_lib_static)
+
 include(FindOpenMP)
 if(OPENMP_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -50,7 +56,8 @@ set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${PROJECT_NAME}.dir
 
 add_executable(${PROJECT_NAME} ${SRCS})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${JSONCPP_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${OUTPUT_DIRECTORY})
 target_compile_definitions(${PROJECT_NAME} PUBLIC GIT_SHA1="${GIT_SHA1}")
-target_link_libraries(${PROJECT_NAME} ${Thread_LIBRARIES} ${MHD_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Thread_LIBRARIES} ${MHD_LIBRARIES} ${JSONCPP_LIBRARIES})
 

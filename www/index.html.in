@@ -122,9 +122,9 @@ a.aciXEb{padding:0 5px;background:rgba(255,255,255,.9);}
 										<div class="gstl_0 sbib_a" style="height: 144px;">
 											<div class="sbib_b" dir="ltr" id="sb_ifc0">
 												<div id="gs_lc0" style="position: relative;">
-													<textarea id="dataset" name="dataset" class="gsfi" style="border: medium none; padding: 0px; margin: 0px; width: 559px; background: transparent repeat scroll 0% 0%; position: absolute; z-index: 6; left: 0px; outline: medium none currentcolor; height: 131px;">
+													<textarea id="json" name="json" class="gsfi" style="border: medium none; padding: 0px; margin: 0px; width: 559px; background: transparent repeat scroll 0% 0%; position: absolute; z-index: 6; left: 0px; outline: medium none currentcolor; height: 131px;">
 # Example cards rendering job JSON
-# Use '#' to make a comment line
+# Use '#' to make a comment until the end of line
 {
     "cards":[
     {
@@ -205,6 +205,6 @@ function submitOnEnter(event)
 		event.preventDefault();
 	}
 }
-document.getElementById("dataset").addEventListener("keypress", submitOnEnter);
+document.getElementById("json").addEventListener("keypress", submitOnEnter);
 </script>
 </html>
