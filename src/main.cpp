@@ -225,6 +225,20 @@ static int callback(void* cls, struct MHD_Connection* connection,
 			}
 		}
 	}
+	else if (!memcmp(curl, "/request/", sizeof("/request/") - 1))
+	{
+		string stimestamp(curl + sizeof("/request/") - 1);
+		uint64_t timestamp;
+
+		if (!(stringstream(stimestamp) >> timestamp))
+			return result_404(connection);
+
+		map<uint64_t, Job>::iterator it = jobs.find(timestamp);
+		if (it == jobs.end())
+			return result_404(connection);
+
+		result = it->second.getResult();
+	}
 	else if (!getFile(&curl[1], result, mime))
 	{
 		return result_404(connection);
