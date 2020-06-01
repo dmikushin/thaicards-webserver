@@ -1,4 +1,5 @@
 #include "index.h"
+#include "job.h"
 #include "sslkeys.h"
 #include "timing.h"
 #include "wait.h"
@@ -33,6 +34,8 @@ unique_ptr<map<string, string> > www_data_mime;
 
 static Index indexPage;
 static Wait waitPage;
+
+map<uint64_t, Job> jobs;
 
 class Post
 {
@@ -197,8 +200,7 @@ static int callback(void* cls, struct MHD_Connection* connection,
 					uint64_t timestamp;
 					get_time(&timestamp);
 
-					// TODO Implement job server
-					// jobs[timestamp].execute(json_parsed);
+					jobs[timestamp].execute(json_parsed);
 
 					result = waitPage.getHtml(timestamp);
 				}
