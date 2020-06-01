@@ -1,5 +1,6 @@
 #include "job.h"
 
+#include <iomanip>
 #include <sstream>
 #include <string.h>
 #include <sys/stat.h>
@@ -55,6 +56,7 @@ void Job::execute(const uint64_t timestamp_, const Json::Value& json_)
 {
 	timestamp = timestamp_;
 	json = json_;
+	ncards = json["cards"].size();
 	
 	pthread_create(&thread, NULL, &Job::worker, this);
 }
@@ -69,7 +71,19 @@ string Job::getResult()
 			"</html>";
 	}
 
-	return "";
+	stringstream ss;
+	ss << "<html>";
+	for (int i = 0; i < ncards; i++)
+	{
+		ss << "<img src=\"/request/";
+		ss << timestamp;
+		ss << "/thaicard_";
+		ss << setfill('0') << setw(3) << (i + 1);
+		ss << ".png\" /><br />";
+	}
+	ss << "</html>";
+
+	return ss.str();
 }
 
 Job::~Job()

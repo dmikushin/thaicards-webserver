@@ -11,6 +11,8 @@ class Job
 {
 	uint64_t timestamp;
 	Json::Value json;
+	size_t ncards;
+
 	pthread_t thread;
 	std::atomic<bool> ready;
 	

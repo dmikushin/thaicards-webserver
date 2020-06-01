@@ -10,6 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
+#include <fstream>
 #include <json/json.h>
 #include <map>
 #include <memory>
@@ -232,12 +233,36 @@ static int callback(void* cls, struct MHD_Connection* connection,
 
 		if (!(stringstream(stimestamp) >> timestamp))
 			return result_404(connection);
+			
+		std::size_t found = stimestamp.find_first_of("/");
+		if (found != string::npos)
+		{
+			string simage(curl + sizeof("/request/") - 1 + found);
 
-		map<uint64_t, Job>::iterator it = jobs.find(timestamp);
-		if (it == jobs.end())
-			return result_404(connection);
+			// Try to interpret as a card file request.
+			stringstream ss;
+			ss << "/tmp/";
+			ss << timestamp;
+			ss << simage;
+			string filename = ss.str();
+			ifstream file(filename.c_str());
 
-		result = it->second.getResult();
+			if (!file.is_open())
+				return result_404(connection);
+
+			stringstream buffer;
+			buffer << file.rdbuf();
+			result = buffer.str();
+			mime = "image/png";
+		}
+		else
+		{
+			map<uint64_t, Job>::iterator it = jobs.find(timestamp);
+			if (it == jobs.end())
+				return result_404(connection);
+
+			result = it->second.getResult();
+		}
 	}
 	else if (!getFile(&curl[1], result, mime))
 	{
