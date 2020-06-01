@@ -9,6 +9,7 @@
 
 class Job
 {
+	uint64_t timestamp;
 	Json::Value json;
 	pthread_t thread;
 	std::atomic<bool> ready;
@@ -19,7 +20,7 @@ public :
 
 	Job();
 	
-	void execute(const Json::Value& json);
+	void execute(const uint64_t timestamp, const Json::Value& json);
 	
 	std::string getResult();
 

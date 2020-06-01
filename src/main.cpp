@@ -200,7 +200,7 @@ static int callback(void* cls, struct MHD_Connection* connection,
 					uint64_t timestamp;
 					get_time(&timestamp);
 
-					jobs[timestamp].execute(json_parsed);
+					jobs[timestamp].execute(timestamp, json_parsed);
 
 					result = waitPage.getHtml(timestamp);
 				}
