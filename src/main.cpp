@@ -12,7 +12,6 @@
 #include <errno.h>
 #include <fstream>
 #include <json/json.h>
-#include <map>
 #include <memory>
 #include <microhttpd.h>
 #include <regex>
@@ -36,7 +35,7 @@ unique_ptr<map<string, string> > www_data_mime;
 static Index indexPage;
 static Wait waitPage;
 
-map<uint64_t, Job> jobs;
+JobServer jobServer;
 
 class Post
 {
@@ -201,7 +200,7 @@ static int callback(void* cls, struct MHD_Connection* connection,
 					uint64_t timestamp;
 					get_time(&timestamp);
 
-					jobs[timestamp].execute(timestamp, json_parsed);
+					jobServer.submit(timestamp, json_parsed);
 
 					result = waitPage.getHtml(timestamp);
 				}
@@ -241,7 +240,7 @@ static int callback(void* cls, struct MHD_Connection* connection,
 
 			// Try to interpret as a card file request.
 			stringstream ss;
-			ss << "/tmp/";
+			ss << "/tmp/" BACKEND "/";
 			ss << timestamp;
 			ss << simage;
 			string filename = ss.str();
@@ -257,11 +256,8 @@ static int callback(void* cls, struct MHD_Connection* connection,
 		}
 		else
 		{
-			map<uint64_t, Job>::iterator it = jobs.find(timestamp);
-			if (it == jobs.end())
+			if (!jobServer.getResult(timestamp, result))
 				return result_404(connection);
-
-			result = it->second.getResult();
 		}
 	}
 	else if (!getFile(&curl[1], result, mime))

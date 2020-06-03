@@ -58,6 +58,7 @@ add_executable(${PROJECT_NAME} ${SRCS})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${JSONCPP_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${OUTPUT_DIRECTORY})
+target_compile_definitions(${PROJECT_NAME} PUBLIC BACKEND="thaicards")
 target_compile_definitions(${PROJECT_NAME} PUBLIC GIT_SHA1="${GIT_SHA1}")
 target_link_libraries(${PROJECT_NAME} ${Thread_LIBRARIES} ${MHD_LIBRARIES} ${JSONCPP_LIBRARIES})
 
