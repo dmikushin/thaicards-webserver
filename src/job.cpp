@@ -5,6 +5,14 @@
 #include <sstream>
 #include <string.h>
 
+#ifdef __APPLE__
+#include <ghc/filesystem.hpp>
+namespace fs = ghc::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
+
 using namespace std;
 
 void* Job::worker(void* user)
@@ -57,7 +65,7 @@ void* Job::worker(void* user)
 }
 
 Job::Job() : ready(false) { }
-	
+
 void Job::execute(const uint64_t timestamp_, const Json::Value& json_)
 {
 	timestamp = timestamp_;
@@ -94,8 +102,11 @@ string Job::getResult()
 
 Job::~Job()
 {
-	pthread_cancel(thread);
-	pthread_join(thread, NULL);
+	if (!ready)
+	{
+		pthread_cancel(thread);
+		pthread_join(thread, NULL);
+	}
 }
 
 void JobServer::submit(const uint64_t timestamp, const Json::Value& json)
@@ -115,6 +126,65 @@ bool JobServer::getResult(const uint64_t timestamp, string& result)
 
 JobServer::JobServer()
 {
-	// TODO Import existing results.
+	string path = "/tmp/" BACKEND "/";
+	if (!fs::exists(path))
+		return;
+	if (!fs::is_directory(path))
+		return;
+
+	// Import existing results.
+	for (const auto& entry : fs::directory_iterator(path))
+	{
+		if (!fs::is_directory(entry))
+			continue;
+
+		const fs::path& path = entry.path();
+
+		// Parse the timestamp.
+		const string stimestamp = path.filename();
+		uint64_t timestamp;
+		if (!(stringstream(stimestamp) >> timestamp))
+			continue;
+
+		fs::path jsonPath = path / BACKEND ".json";
+		if (!fs::exists(jsonPath))
+			continue;
+		if (!fs::is_regular_file(jsonPath))
+			continue;
+
+		// Read the JSON file.
+		const string filename = jsonPath.string();
+		ifstream file(filename.c_str());
+		if (!file.is_open())
+			continue;
+
+		stringstream buffer;
+		buffer << file.rdbuf();
+		string json = buffer.str();
+
+		// Ensure JSON is valid and count the cards.
+		size_t ncards = 0;
+		try
+		{
+			Json::Value json_parsed;
+			json_parsed.clear();
+			Json::Reader reader;
+			if (!reader.parse(json, json_parsed))
+				continue;
+
+			ncards = json_parsed["cards"].size();
+		}
+		catch (exception &e)
+		{
+			continue;
+		}
+
+		// Create the job and add it to the job server.
+		Job& job = jobs[timestamp];
+		job.timestamp = timestamp;
+		job.json = json;
+		job.ncards = ncards;
+		job.ready = true;
+	}
 }
 

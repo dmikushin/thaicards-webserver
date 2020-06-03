@@ -1,3 +1,6 @@
 [submodule "ThirdParty/jsoncpp"]
 	path = ThirdParty/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "ThirdParty/filesystem"]
+	path = ThirdParty/filesystem
+	url = https://github.com/gulrak/filesystem.git

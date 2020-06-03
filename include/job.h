@@ -8,6 +8,8 @@
 #include <pthread.h>
 #include <string>
 
+class JobServer;
+
 class Job
 {
 	uint64_t timestamp;
@@ -22,12 +24,16 @@ class Job
 public :
 
 	Job();
+
+	Job(const uint64_t timestamp, const Json::Value& json);
 	
 	void execute(const uint64_t timestamp, const Json::Value& json);
 	
 	std::string getResult();
 
 	~Job();
+
+	friend class JobServer;
 };
 
 class JobServer

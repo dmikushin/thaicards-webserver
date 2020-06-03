@@ -15,6 +15,14 @@ set_property(TARGET jsoncpp_lib_static PROPERTY POSITION_INDEPENDENT_CODE ON)
 set(JSONCPP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/jsoncpp/include")
 set(JSONCPP_LIBRARIES jsoncpp_lib_static)
 
+# Filesystem library variations on GCC/Clang.
+if (APPLE)
+add_subdirectory(ThirdParty/filesystem)
+set(FSLIB ghc_filesystem)
+else()
+set(FSLIB stdc++fs)
+endif()
+
 include(FindOpenMP)
 if(OPENMP_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -60,5 +68,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${JSONCPP_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PRIVATE ${OUTPUT_DIRECTORY})
 target_compile_definitions(${PROJECT_NAME} PUBLIC BACKEND="thaicards")
 target_compile_definitions(${PROJECT_NAME} PUBLIC GIT_SHA1="${GIT_SHA1}")
-target_link_libraries(${PROJECT_NAME} ${Thread_LIBRARIES} ${MHD_LIBRARIES} ${JSONCPP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Thread_LIBRARIES} ${MHD_LIBRARIES} ${JSONCPP_LIBRARIES} ${FSLIB})
 
