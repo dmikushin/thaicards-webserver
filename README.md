@@ -15,8 +15,8 @@ cd thaicards-webserver
 mkdir ssl
 cd ssl
 sudo certbot certonly -d $(hostname) --standalone --agree-tos -m dmitry@kernelgen.org
-sudo cp /etc/letsencrypt/live/thaicards/privkey.pem id_rsa.thaicards
-sudo cp /etc/letsencrypt/live/thaicards/fullchain.pem id_rsa.thaicards.crt
+sudo cp /etc/letsencrypt/live/hostname/privkey.pem id_rsa.thaicards
+sudo cp /etc/letsencrypt/live/hostname/fullchain.pem id_rsa.thaicards.crt
 cd ..
 ```
 
