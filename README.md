@@ -37,7 +37,7 @@ make -j12
 sudo ./thaicards-webserver 443
 ```
 
-* **Production mode**: running webserver with "sudo" is generally very insequre; alternatively, install nginx and configure a proxypass to an unprivileged  local port:
+* **Production mode**: running webserver with "sudo" is generally very insecure; alternatively, install nginx and configure a proxypass to an unprivileged  local port:
 
 ```
 sudo apt install nginx
